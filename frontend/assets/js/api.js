@@ -1,5 +1,5 @@
 // api.js — thin wrapper around the Flask REST API
-const API = {
+var API = window.API || {
   base: window.API_BASE || 'http://localhost:5000/api',
   token: window.API_TOKEN || null,
 

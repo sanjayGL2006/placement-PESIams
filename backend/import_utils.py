@@ -17,8 +17,8 @@ import pdfplumber
 # --- canonical field names & the header aliases we'll accept -------------
 
 STUDENT_FIELD_ALIASES = {
-    "register_number": ["register number", "reg no", "reg. no", "regno", "register_no", "usn"],
-    "name": ["student name", "name", "full name"],
+    "register_number": ["register number", "reg no", "reg. no", "regno", "register_no", "usn", "roll no", "roll number", "student id", "id", "usn no"],
+    "name": ["student name", "name", "full name", "student"],
     "department": ["department", "dept"],
     "course": ["course"],
     "section": ["section", "sec"],
@@ -35,6 +35,7 @@ STUDENT_FIELD_ALIASES = {
     "resume_link": ["resume link", "resume", "resume url"],
     "placement_status": ["placement status", "status"],
     "eligible_status": ["eligible status", "eligible"],
+    "company": ["company", "company name", "placed at", "recruiter"],
 }
 
 COMPANY_FIELD_ALIASES = {
@@ -151,6 +152,14 @@ def normalize_student_row(row, mapping):
         if canonical:
             out[canonical] = _clean_val(row.get(orig_col))
 
+    # If register_number is missing but name is present, try to extract USN from parentheses like "Arjun M (PES24BCA01)"
+    if not out.get("register_number") and out.get("name"):
+        name_val = str(out["name"]).strip()
+        match = re.search(r"\(([^)]+)\)", name_val)
+        if match:
+            out["register_number"] = match.group(1).strip()
+            out["name"] = re.sub(r"\([^)]+\)", "", name_val).strip()
+
     errors = []
     if not out.get("register_number"):
         errors.append("Missing register number")
@@ -175,6 +184,46 @@ def normalize_student_row(row, mapping):
             out["backlogs"] = int(out["backlogs"])
         except (ValueError, TypeError):
             out["backlogs"] = 0
+
+    # Format section nicely
+    if out.get("section"):
+        sec = str(out["section"]).strip()
+        match = re.match(r"^section\s+([a-zA-Z])$", sec, re.IGNORECASE)
+        if match:
+            out["section"] = f"Section {match.group(1).upper()}"
+        elif len(sec) == 1 and sec.isalpha():
+            out["section"] = f"Section {sec.upper()}"
+        else:
+            out["section"] = sec.title()
+
+    # Format department nicely
+    if out.get("department"):
+        dept = str(out["department"]).strip()
+        lower = dept.lower()
+        if lower == "bca":
+            out["department"] = "BCA"
+        elif lower == "bba":
+            out["department"] = "BBA"
+        elif lower == "b.com":
+            out["department"] = "B.Com"
+        elif lower == "b.sc":
+            out["department"] = "B.Sc"
+        else:
+            out["department"] = dept.title()
+
+    # Normalize placement status to avoid DB constraint failures
+    if out.get("placement_status"):
+        status = str(out["placement_status"]).strip().lower()
+        if status in ("placed", "selected", "yes", "hired", "accepted", "offered"):
+            out["placement_status"] = "selected"
+        elif status in ("joined", "joined_co"):
+            out["placement_status"] = "joined"
+        elif status in ("applied", "in process", "in-process", "in_process", "ongoing", "process"):
+            out["placement_status"] = "applied"
+        else:
+            out["placement_status"] = "unplaced"
+    else:
+        out["placement_status"] = "unplaced"
 
     return out, errors
 
@@ -216,6 +265,53 @@ def build_preview(df, kind):
     kind: 'student' | 'company'
     Returns {mapping, rows: [{data, errors, is_duplicate}], summary}
     """
+    if kind == "student":
+        # Check for combined "DEPARTMENT & SECTION" column (case/format-insensitive)
+        combined_cols = [c for c in df.columns if _normalize_header(c) in ("departmentsection", "departmentandsection", "deptsec", "deptsection")]
+        if combined_cols:
+            combined_col = combined_cols[0]
+            dept_vals = []
+            sec_vals = []
+            for val in df[combined_col]:
+                val_str = str(val).strip() if not pd.isna(val) else ""
+                dept_val = ""
+                sec_val = ""
+                if "," in val_str:
+                    parts = val_str.rsplit(",", 1)
+                    dept_val = parts[0].strip()
+                    sec_val = parts[1].strip()
+                elif " - " in val_str:
+                    parts = val_str.rsplit(" - ", 1)
+                    dept_val = parts[0].strip()
+                    sec_val = parts[1].strip()
+                elif "-" in val_str:
+                    parts = val_str.rsplit("-", 1)
+                    dept_val = parts[0].strip()
+                    sec_val = parts[1].strip()
+                elif ";" in val_str:
+                    parts = val_str.rsplit(";", 1)
+                    dept_val = parts[0].strip()
+                    sec_val = parts[1].strip()
+                elif "section" in val_str.lower():
+                    # Split at "section"
+                    idx = val_str.lower().find("section")
+                    dept_val = val_str[:idx].strip().rstrip("-").rstrip(",").rstrip().strip()
+                    sec_val = val_str[idx:].strip()
+                else:
+                    match_end = re.search(r"\s+([a-zA-Z])$", val_str)
+                    if match_end:
+                        dept_val = val_str[:match_end.start()].strip()
+                        sec_val = match_end.group(1).strip()
+                    else:
+                        dept_val = val_str
+                dept_vals.append(dept_val)
+                sec_vals.append(sec_val)
+            
+            df = df.copy() # Avoid modifying a potentially slice-view DataFrame
+            df["Department"] = dept_vals
+            df["Section"] = sec_vals
+            df = df.drop(columns=[combined_col])
+
     aliases = STUDENT_FIELD_ALIASES if kind == "student" else COMPANY_FIELD_ALIASES
     normalizer = normalize_student_row if kind == "student" else normalize_company_row
     mapping = map_columns(list(df.columns), aliases)

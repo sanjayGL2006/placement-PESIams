@@ -39,32 +39,32 @@
 
     <!-- Top Row Cards -->
     <div class="row g-4 mb-4">
-      <!-- 1. Placement Summary 2023 -->
+      <!-- 1. Placement Summary 2026 -->
       <div class="col-12 col-lg-6">
         <div class="pp-card h-100 d-flex flex-column justify-content-between">
           <div>
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="h6 font-weight-800 text-dark mb-0">Placement Summary 2023</h5>
+              <h5 class="h6 font-weight-800 text-dark mb-0">Placement Summary 2026</h5>
               <span class="badge-pill-success"><i class="fa-solid fa-check"></i> Audit Ready</span>
             </div>
-
+ 
             <!-- Primary Metrics Grid -->
             <div class="row g-3 my-2">
               <div class="col-4 text-center border-end">
                 <div class="text-muted small font-weight-600">Total Placed</div>
-                <div class="font-weight-800 text-dark" style="font-size: 1.5rem;">1,850</div>
+                <div class="font-weight-800 text-dark" style="font-size: 1.5rem;" id="rptTotalPlaced">0</div>
               </div>
               <div class="col-4 text-center border-end">
                 <div class="text-muted small font-weight-600">Avg. Package</div>
-                <div class="font-weight-800 text-primary" style="font-size: 1.5rem; color: var(--pp-primary) !important;">$8.5 LPA</div>
+                <div class="font-weight-800 text-primary" style="font-size: 1.5rem; color: var(--pp-primary) !important;" id="rptAvgPackage">$0 LPA</div>
               </div>
               <div class="col-4 text-center">
                 <div class="text-muted small font-weight-600">Total Offers</div>
-                <div class="font-weight-800 text-dark" style="font-size: 1.5rem;">2,140</div>
+                <div class="font-weight-800 text-dark" style="font-size: 1.5rem;" id="rptTotalOffers">0</div>
               </div>
             </div>
           </div>
-
+ 
           <!-- Action Buttons -->
           <div class="pt-3 border-top d-flex gap-2">
             <a href="download.php?type=pdf" class="btn btn-pp-primary flex-grow-1 justify-content-center text-white text-decoration-none">
@@ -76,30 +76,30 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- 2. Student Eligibility Card -->
       <div class="col-12 col-lg-6">
         <div class="pp-card h-100 d-flex flex-column justify-content-between">
           <div>
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="h6 font-weight-800 text-dark mb-0">Student Eligibility</h5>
-              <span class="badge-pill-info">2,100 / 2,400 Candidates</span>
+              <span class="badge-pill-info" id="rptEligibilityBadge">0 / 00 Candidates</span>
             </div>
-
-            <p class="text-muted small mb-3">87.5% of total registered students meet baseline academic and attendance criteria for corporate hiring drives.</p>
-
+ 
+            <p class="text-muted small mb-3" id="rptEligibilityText">0% of total registered students meet baseline academic and attendance criteria for corporate hiring drives.</p>
+ 
             <!-- Thick Horizontal Progress Bar -->
             <div class="my-3">
               <div class="d-flex justify-content-between small font-weight-600 text-dark mb-1">
-                <span>Eligible Candidates (87.5%)</span>
-                <span>Ineligible (12.5%)</span>
+                <span id="rptEligibleLabel">Eligible Candidates (0%)</span>
+                <span id="rptIneligibleLabel">Ineligible (0%)</span>
               </div>
               <div class="progress" style="height: 14px; border-radius: 999px; background-color: #E2E8F0;">
-                <div class="progress-bar" style="width: 87.5%; background-color: var(--pp-primary);"></div>
+                <div class="progress-bar" style="width: 0%; background-color: var(--pp-primary);" id="rptEligibilityBar"></div>
               </div>
             </div>
           </div>
-
+ 
           <!-- Action Button -->
           <div class="pt-3 border-top">
             <button class="btn btn-pp-outline w-100 justify-content-center" onclick="showToast('Generating full eligibility breakdown PDF...');">
@@ -197,6 +197,40 @@
 
   </main>
 
+  <script>window.API_BASE = '<?php echo API_BASE; ?>'; window.API_TOKEN = '<?php echo $_SESSION['token'] ?? ""; ?>';</script>
+  <script src="assets/js/api.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    async function loadReportStats() {
+      try {
+        const stats = await API.get('/dashboard/stats');
+        
+        // 1. Update Placement Summary
+        document.getElementById('rptTotalPlaced').innerText = (stats.students_selected || 0).toLocaleString();
+        document.getElementById('rptAvgPackage').innerText = stats.average_package ? `$${stats.average_package} LPA` : '$0 LPA';
+        document.getElementById('rptTotalOffers').innerText = (stats.total_offer_letters || 0).toLocaleString();
+        
+        // 2. Update Student Eligibility
+        const total = stats.total_students || 0;
+        const eligible = stats.eligible_students || 0;
+        const pct = total ? Math.round((eligible / total) * 100) : 0;
+        const ineligiblePct = total ? (100 - pct) : 0;
+        
+        document.getElementById('rptEligibilityBadge').innerText = `${eligible.toLocaleString()} / ${total.toLocaleString()} Candidates`;
+        document.getElementById('rptEligibilityText').innerText = `${pct}% of total registered students meet baseline academic and attendance criteria for corporate hiring drives.`;
+        document.getElementById('rptEligibleLabel').innerText = `Eligible Candidates (${pct}%)`;
+        document.getElementById('rptIneligibleLabel').innerText = `Ineligible (${ineligiblePct}%)`;
+        document.getElementById('rptEligibilityBar').style.width = pct + '%';
+        
+      } catch (err) {
+        console.error('Failed to load report stats:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadReportStats();
+    });
+  </script>
 </body>
 </html>

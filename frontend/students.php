@@ -48,9 +48,13 @@
         <div class="col-6 col-md-2">
           <select class="form-select-pp w-100" id="deptFilter" onchange="loadStudents(1)">
             <option value="">Department</option>
-            <option value="Computer Science">Computer Science</option>
-            <option value="Electronics & Comm.">Electronics & Comm.</option>
-            <option value="Information Tech">Information Tech</option>
+          </select>
+        </div>
+
+        <!-- Section Dropdown -->
+        <div class="col-6 col-md-2">
+          <select class="form-select-pp w-100" id="sectionFilter" onchange="loadStudents(1)">
+            <option value="">Section</option>
           </select>
         </div>
 
@@ -65,17 +69,15 @@
         </div>
 
         <!-- Batch Year Dropdown -->
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-md-1">
           <select class="form-select-pp w-100" id="batchFilter" onchange="loadStudents(1)">
             <option value="">Batch Year</option>
-            <option value="2024" selected>2023-2024</option>
-            <option value="2025">2024-2025</option>
           </select>
         </div>
 
         <!-- Showing Count Text -->
-        <div class="col-12 col-md-3 text-md-end">
-          <span class="text-muted small font-weight-600" id="showingText">Showing 1-10 of 2,450 students</span>
+        <div class="col-12 col-md-2 text-md-end">
+          <span class="text-muted small font-weight-600" id="showingText">Showing 0 of 0 students</span>
         </div>
       </div>
     </div>
@@ -176,12 +178,142 @@
     </div>
   </div>
 
+  <!-- Edit Student Modal -->
+  <div class="modal fade" id="editStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+        <div class="modal-header border-0 pb-0 px-4 pt-4">
+          <h5 class="modal-title font-weight-bold"><i class="fa-solid fa-user-pen text-primary me-2"></i> Edit Student Profile</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="editStudentForm" onsubmit="saveStudentChanges(event)">
+            <input type="hidden" id="editStudentId">
+            <div class="mb-3">
+              <label class="form-label font-weight-600 small text-muted">FULL NAME</label>
+              <input type="text" id="editName" class="form-control form-control-pp" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label font-weight-600 small text-muted">REGISTER / ROLL NUMBER</label>
+              <input type="text" id="editRegister" class="form-control form-control-pp" readonly disabled>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label font-weight-600 small text-muted">DEPARTMENT</label>
+                <select id="editDept" class="form-select-pp w-100" required>
+                  <!-- Loaded dynamically -->
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label font-weight-600 small text-muted">SECTION</label>
+                <input type="text" id="editSection" class="form-control form-control-pp" placeholder="e.g. Section A" required>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label font-weight-600 small text-muted">ACADEMIC YEAR</label>
+                <input type="text" id="editYear" class="form-control form-control-pp" placeholder="e.g. 2023-2024" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label font-weight-600 small text-muted">PLACEMENT STATUS</label>
+                <select id="editPlacementStatus" class="form-select-pp w-100" required>
+                  <option value="unplaced">Unplaced</option>
+                  <option value="applied">Applied</option>
+                  <option value="selected">Selected</option>
+                  <option value="joined">Joined</option>
+                </select>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label font-weight-600 small text-muted">CGPA</label>
+                <input type="number" step="0.01" min="0" max="10" id="editCgpa" class="form-control form-control-pp" placeholder="e.g. 8.5">
+              </div>
+              <div class="col-6">
+                <label class="form-label font-weight-600 small text-muted">BACKLOGS</label>
+                <input type="number" min="0" id="editBacklogs" class="form-control form-control-pp" placeholder="e.g. 0">
+              </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+              <button type="button" class="btn btn-pp-outline" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-pp-primary">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>window.API_BASE = '<?php echo API_BASE; ?>'; window.API_TOKEN = '<?php echo $_SESSION['token']; ?>';</script>
   <script src="assets/js/api.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     const MOCK_STUDENTS = [];
+
+    // Helper to format section nicely (e.g., "section C" -> "Section C")
+    function formatSection(sec) {
+      if (!sec) return 'Section A';
+      sec = sec.trim();
+      const match = sec.match(/^section\s+([a-zA-Z])$/i);
+      if (match) {
+        return 'Section ' + match[1].toUpperCase();
+      }
+      if (sec.length === 1 && /[a-zA-Z]/.test(sec)) {
+        return 'Section ' + sec.toUpperCase();
+      }
+      return sec;
+    }
+
+    // Helper to format department nicely (e.g., "bca" -> "BCA")
+    function formatDept(dept) {
+      if (!dept) return 'Computer Science';
+      dept = dept.trim();
+      const lower = dept.toLowerCase();
+      if (lower === 'bca') return 'BCA';
+      if (lower === 'bba') return 'BBA';
+      if (lower === 'b.com') return 'B.Com';
+      if (lower === 'b.sc') return 'B.Sc';
+      // Capitalize first letters of words
+      return dept.replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    // Dynamic Filter Loader
+    async function initFilters() {
+      try {
+        const filters = await API.get('/dashboard/filters');
+        
+        // 1. Populate Department filter
+        const deptSelect = document.getElementById('deptFilter');
+        deptSelect.innerHTML = '<option value="">Department</option>';
+        filters.departments.forEach(d => {
+          deptSelect.innerHTML += `<option value="${d}">${formatDept(d)}</option>`;
+        });
+
+        // 2. Populate editDept dropdown
+        const editDeptSelect = document.getElementById('editDept');
+        editDeptSelect.innerHTML = '';
+        filters.departments.forEach(d => {
+          editDeptSelect.innerHTML += `<option value="${d}">${formatDept(d)}</option>`;
+        });
+        
+        // 3. Populate Section filter
+        const sectionSelect = document.getElementById('sectionFilter');
+        sectionSelect.innerHTML = '<option value="">Section</option>';
+        filters.sections.forEach(s => {
+          sectionSelect.innerHTML += `<option value="${s}">${formatSection(s)}</option>`;
+        });
+
+        // 4. Populate Batch Year filter
+        const batchSelect = document.getElementById('batchFilter');
+        batchSelect.innerHTML = '<option value="">Batch Year</option>';
+        filters.academic_years.forEach(y => {
+          batchSelect.innerHTML += `<option value="${y}">${y}</option>`;
+        });
+      } catch (err) {
+        console.error('Failed to load filter options:', err);
+      }
+    }
 
     async function loadStudents(page = 1) {
       const tbody = document.getElementById('studentTableBody');
@@ -190,21 +322,24 @@
       try {
         const search = document.getElementById('search').value;
         const dept = document.getElementById('deptFilter').value;
+        const section = document.getElementById('sectionFilter').value;
         const status = document.getElementById('statusFilter').value;
+        const batch = document.getElementById('batchFilter').value;
+        const perPage = document.getElementById('perPageSelect').value || 25;
 
-        const data = await API.get(`/students?page=${page}&per_page=10&search=${search}&department=${dept}&placement_status=${status}`);
+        const data = await API.get(`/students?page=${page}&per_page=${perPage}&search=${search}&department=${dept}&section=${section}&placement_status=${status}&academic_year=${batch}`);
         if(data && data.students) {
-          renderStudents(data.students, data.total);
+          renderStudents(data.students, data.total, page, perPage);
           return;
         }
       } catch(err) {
         console.log('Using mock student directory:', err.message);
       }
 
-      renderStudents(MOCK_STUDENTS, 2450);
+      renderStudents(MOCK_STUDENTS, 0, page, 25);
     }
 
-    function renderStudents(list, total) {
+    function renderStudents(list, total, page, perPage) {
       if (!list || list.length === 0) {
         document.getElementById('showingText').innerText = `Showing 0 of 0 students`;
         document.getElementById('studentTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted small"><i class="fa-regular fa-user me-1" style="font-size: 1.25rem;"></i> No students found</td></tr>`;
@@ -213,7 +348,9 @@
         return;
       }
 
-      document.getElementById('showingText').innerText = `Showing 1-${list.length} of ${total.toLocaleString()} students`;
+      const start = (page - 1) * perPage + 1;
+      const end = Math.min(page * perPage, total);
+      document.getElementById('showingText').innerText = `Showing ${start}-${end} of ${total.toLocaleString()} students`;
 
       // Table View
       document.getElementById('studentTableBody').innerHTML = list.map(s => {
@@ -239,8 +376,8 @@
               </div>
             </td>
             <td>
-              <div class="font-weight-600 text-dark">${s.department_name || s.dept || 'Computer Science'}</div>
-              <div class="text-muted small">${s.section || s.sec || 'Section A'}</div>
+              <div class="font-weight-600 text-dark">${formatDept(s.department_name || s.dept)}</div>
+              <div class="text-muted small">${formatSection(s.section || s.sec)}</div>
             </td>
             <td>
               <div class="d-flex align-items-center font-weight-600 text-dark">
@@ -249,43 +386,122 @@
             </td>
             <td>${statusBadge}</td>
             <td class="text-end">
-              <button class="btn btn-sm btn-pp-outline py-1 px-2"><i class="fa-regular fa-eye me-1"></i> View</button>
+              <button class="btn btn-sm btn-pp-outline py-1 px-2" onclick="showToast('Loading profile for ${s.name}...')"><i class="fa-regular fa-eye me-1"></i> View</button>
+              <button class="btn btn-sm btn-pp-primary py-1 px-2 ms-1" onclick="openEditModal(${s.id})"><i class="fa-solid fa-user-pen"></i> Edit</button>
             </td>
           </tr>
         `;
       }).join('');
 
       // Grid View
-      document.getElementById('gridViewContainer').innerHTML = list.map(s => `
-        <div class="col-12 col-sm-6 col-lg-3">
-          <div class="pp-card h-100">
-            <div class="d-flex align-items-center gap-3 mb-3">
-              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(s.name || 'Student')}&background=4F46E5&color=fff" class="rounded-circle" width="48" height="48">
-              <div>
-                <div class="font-weight-700 text-dark mb-0">${s.name}</div>
-                <div class="text-muted small">${s.register_number || s.id || '21CS000'}</div>
+      document.getElementById('gridViewContainer').innerHTML = list.map(s => {
+        const isPlaced = s.placement_status === 'selected' || s.placement_status === 'joined';
+        const badge = isPlaced 
+          ? `<span class="badge-pill-success">Placed</span>`
+          : (s.placement_status === 'applied' ? `<span class="badge-pill-warning">In-process</span>` : `<span class="badge-pill-danger">Unplaced</span>`);
+          
+        return `
+          <div class="col-12 col-sm-6 col-lg-3">
+            <div class="pp-card h-100">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(s.name || 'Student')}&background=4F46E5&color=fff" class="rounded-circle" width="48" height="48">
+                <div>
+                  <div class="font-weight-700 text-dark mb-0">${s.name}</div>
+                  <div class="text-muted small">${s.register_number || s.id || '21CS000'}</div>
+                </div>
+              </div>
+              <div class="small mb-2"><span class="text-muted">Dept & Sec:</span> <span class="font-weight-600">${formatDept(s.department_name || s.dept)} (${formatSection(s.section || s.sec)})</span></div>
+              <div class="small mb-3"><span class="text-muted">Company:</span> <span class="font-weight-600">${s.company_name || s.company || '-'}</span></div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                ${badge}
+                <div class="d-flex gap-1">
+                  <button class="btn btn-sm btn-pp-outline py-1 px-2" onclick="showToast('Loading profile for ${s.name}...')"><i class="fa-regular fa-eye"></i> View</button>
+                  <button class="btn btn-sm btn-pp-primary py-1 px-2" onclick="openEditModal(${s.id})"><i class="fa-solid fa-user-pen"></i> Edit</button>
+                </div>
               </div>
             </div>
-            <div class="small mb-2"><span class="text-muted">Dept:</span> <span class="font-weight-600">${s.department_name || s.dept || 'CS'}</span></div>
-            <div class="small mb-3"><span class="text-muted">Company:</span> <span class="font-weight-600">${s.company_name || s.company || '-'}</span></div>
-            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-              <span class="badge-pill-success">Placed</span>
-              <button class="btn btn-sm btn-pp-outline py-1"><i class="fa-regular fa-eye me-1"></i> Profile</button>
-            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
-      // Pagination
-      document.getElementById('pagination').innerHTML = `
-        <li class="page-item disabled"><a class="page-link" href="#">Prev</a></li>
-        <li class="page-item active"><a class="page-link" href="#" style="background-color: var(--pp-primary); border-color: var(--pp-primary);">1</a></li>
-        <li class="page-item"><a class="page-link" href="#">2</a></li>
-        <li class="page-item"><a class="page-link" href="#">3</a></li>
-        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
-        <li class="page-item"><a class="page-link" href="#">245</a></li>
-        <li class="page-item"><a class="page-link" href="#">Next</a></li>
-      `;
+      // Render Pagination Links
+      const totalPages = Math.ceil(total / perPage);
+      let paginationHtml = '';
+      
+      // Prev Button
+      paginationHtml += `<li class="page-item ${page === 1 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="event.preventDefault(); ${page > 1 ? `loadStudents(${page - 1})` : ''}">Prev</a>
+      </li>`;
+      
+      // Page numbers (simplified display)
+      for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+        paginationHtml += `<li class="page-item ${page === i ? 'active' : ''}">
+          <a class="page-link" href="#" onclick="event.preventDefault(); loadStudents(${i})" ${page === i ? 'style="background-color: var(--pp-primary); border-color: var(--pp-primary);"' : ''}>${i}</a>
+        </li>`;
+      }
+      if (totalPages > 5) {
+        paginationHtml += `<li class="page-item disabled"><a class="page-link" href="#">...</a></li>`;
+        paginationHtml += `<li class="page-item ${page === totalPages ? 'active' : ''}">
+          <a class="page-link" href="#" onclick="event.preventDefault(); loadStudents(${totalPages})" ${page === totalPages ? 'style="background-color: var(--pp-primary); border-color: var(--pp-primary);"' : ''}>${totalPages}</a>
+        </li>`;
+      }
+      
+      // Next Button
+      paginationHtml += `<li class="page-item ${page === totalPages || totalPages === 0 ? 'disabled' : ''}">
+        <a class="page-link" href="#" onclick="event.preventDefault(); ${page < totalPages ? `loadStudents(${page + 1})` : ''}">Next</a>
+      </li>`;
+      
+      document.getElementById('pagination').innerHTML = paginationHtml;
+    }
+
+    // Modal Operations
+    async function openEditModal(studentId) {
+      try {
+        const student = await API.get(`/students/${studentId}`);
+        if (student) {
+          document.getElementById('editStudentId').value = student.id;
+          document.getElementById('editName').value = student.name || '';
+          document.getElementById('editRegister').value = student.register_number || '';
+          document.getElementById('editDept').value = student.department_name || '';
+          document.getElementById('editSection').value = formatSection(student.section || '');
+          document.getElementById('editYear').value = student.academic_year || '2023-2024';
+          document.getElementById('editPlacementStatus').value = student.placement_status || 'unplaced';
+          document.getElementById('editCgpa').value = student.cgpa || '';
+          document.getElementById('editBacklogs').value = student.backlogs || 0;
+          
+          const modalEl = document.getElementById('editStudentModal');
+          const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+          modalInstance.show();
+        }
+      } catch (err) {
+        showToast('Error loading student details: ' + err.message, 'danger');
+      }
+    }
+
+    async function saveStudentChanges(e) {
+      e.preventDefault();
+      const studentId = document.getElementById('editStudentId').value;
+      const payload = {
+        name: document.getElementById('editName').value,
+        section: document.getElementById('editSection').value,
+        academic_year: document.getElementById('editYear').value,
+        placement_status: document.getElementById('editPlacementStatus').value,
+        cgpa: document.getElementById('editCgpa').value ? parseFloat(document.getElementById('editCgpa').value) : null,
+        backlogs: document.getElementById('editBacklogs').value ? parseInt(document.getElementById('editBacklogs').value) : 0
+      };
+      
+      try {
+        await API.put(`/students/${studentId}`, payload);
+        showToast('Student profile updated successfully!');
+        
+        const modalEl = document.getElementById('editStudentModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if(modalInstance) modalInstance.hide();
+        
+        loadStudents(1);
+      } catch (err) {
+        showToast('Failed to save changes: ' + err.message, 'danger');
+      }
     }
 
     function toggleView(mode) {
@@ -310,7 +526,11 @@
       }
     }
 
-    loadStudents(1);
+    // Initialize dropdowns and load first page on load
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initFilters();
+      loadStudents(1);
+    });
   </script>
 </body>
 </html>

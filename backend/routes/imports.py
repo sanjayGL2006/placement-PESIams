@@ -78,11 +78,17 @@ def commit_students():
     def dept_id(name):
         if not name:
             return None
+        name = name.strip()
         if name in dept_cache:
             return dept_cache[name]
         cur.execute("SELECT id FROM departments WHERE LOWER(name) = LOWER(%s)", (name,))
         row = cur.fetchone()
-        dept_cache[name] = row["id"] if row else None
+        if row:
+            dept_cache[name] = row["id"]
+        else:
+            # Dynamically create the department
+            cur.execute("INSERT INTO departments (name) VALUES (%s) RETURNING id", (name,))
+            dept_cache[name] = cur.fetchone()["id"]
         return dept_cache[name]
 
     for r in rows:
@@ -129,6 +135,30 @@ def commit_students():
                     values,
                 )
                 updated += 1
+
+            # Auto-link company placement if present
+            company_name = data.get("company")
+            if company_name and fields["placement_status"] in ("selected", "joined"):
+                # Get or create company
+                cur.execute("SELECT id FROM companies WHERE LOWER(name) = LOWER(%s)", (company_name.strip(),))
+                crow = cur.fetchone()
+                if crow:
+                    company_id = crow["id"]
+                else:
+                    cur.execute("INSERT INTO companies (name, industry) VALUES (%s, 'Others') RETURNING id", (company_name.strip(),))
+                    company_id = cur.fetchone()["id"]
+                
+                # Get student ID
+                cur.execute("SELECT id FROM students WHERE register_number = %s", (fields["register_number"],))
+                srow = cur.fetchone()
+                if srow:
+                    student_id = srow["id"]
+                    cur.execute(
+                        "INSERT INTO placements (student_id, company_id, offer_status, current_stage) "
+                        "VALUES (%s, %s, 'accepted', 'selected') "
+                        "ON CONFLICT (student_id, company_id) DO NOTHING",
+                        (student_id, company_id)
+                    )
         except Exception as e:
             errors += 1
             error_log.append({"register_number": data.get("register_number"), "error": str(e)})

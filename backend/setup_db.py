@@ -1,4 +1,5 @@
 import os
+# pyrefly: ignore [untyped-import]
 import psycopg2
 from argon2 import PasswordHasher
 

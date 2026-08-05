@@ -20,7 +20,9 @@ def list_students():
     if dept:
         where.append("d.name = %s"); params.append(dept)
     if section:
-        where.append("s.section = %s"); params.append(section)
+        sec_letter = section[-1] if section else "A"
+        where.append("(s.section ILIKE %s OR RIGHT(TRIM(s.section), 1) ILIKE %s)")
+        params.extend([section, sec_letter])
     if year:
         where.append("s.academic_year = %s"); params.append(year)
     if status:

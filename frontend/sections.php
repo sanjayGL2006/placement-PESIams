@@ -40,7 +40,7 @@
             <span class="kpi-title">Total Students</span>
             <i class="fa-solid fa-users text-primary"></i>
           </div>
-          <div class="kpi-value" id="secTotal">800</div>
+          <div class="kpi-value" id="secTotal">0</div>
           <div class="kpi-subtext">Section cohort count</div>
         </div>
       </div>
@@ -49,11 +49,11 @@
         <div class="pp-card kpi-card">
           <div class="kpi-header">
             <span class="kpi-title">Selected Students</span>
-            <span class="text-muted small font-weight-600">84%</span>
+            <span class="text-muted small font-weight-600" id="secSelectedPctText">0%</span>
           </div>
-          <div class="kpi-value" id="secSelected">672</div>
+          <div class="kpi-value" id="secSelected">0</div>
           <div class="progress mt-2" style="height: 6px; border-radius: 999px;">
-            <div class="progress-bar bg-success" style="width: 84%;"></div>
+            <div class="progress-bar bg-success" style="width: 0%;" id="secSelectedProgressBar"></div>
           </div>
         </div>
       </div>
@@ -62,9 +62,9 @@
         <div class="pp-card kpi-card">
           <div class="kpi-header">
             <span class="kpi-title">Placement %</span>
-            <span class="badge-pill-success">Target 80% Exceeded</span>
+            <span class="badge-pill-success animate-pulse" id="secPctBadge">Target 0% Exceeded</span>
           </div>
-          <div class="kpi-value" id="secPct">84.0%</div>
+          <div class="kpi-value" id="secPct">0%</div>
           <div class="kpi-subtext">Conversion rate</div>
         </div>
       </div>
@@ -73,10 +73,10 @@
         <div class="pp-card kpi-card">
           <div class="kpi-header">
             <span class="kpi-title">Avg. Package</span>
-            <span class="badge-pill-info">Top 5% Batch</span>
+            <span class="badge-pill-info" id="secAvgBadge">Top 0% Batch</span>
           </div>
-          <div class="kpi-value" id="secAvg">$9.2 LPA</div>
-          <div class="kpi-subtext">Highest $42 LPA</div>
+          <div class="kpi-value" id="secAvg">$0LPA</div>
+          <div class="kpi-subtext" id="secHighestPackageText">Highest $0 LPA</div>
         </div>
       </div>
     </div>
@@ -93,19 +93,19 @@
           <div class="row mt-3 pt-3 border-top text-center">
             <div class="col-3">
               <div class="small text-muted mb-1"><i class="fa-solid fa-circle me-1" style="color: #4F46E5;"></i> Product</div>
-              <div class="font-weight-700">42%</div>
+              <div class="font-weight-700" id="distProductPct">0%</div>
             </div>
             <div class="col-3">
               <div class="small text-muted mb-1"><i class="fa-solid fa-circle me-1" style="color: #10B981;"></i> Service</div>
-              <div class="font-weight-700">30%</div>
+              <div class="font-weight-700" id="distServicePct">0%</div>
             </div>
             <div class="col-3">
               <div class="small text-muted mb-1"><i class="fa-solid fa-circle me-1" style="color: #F59E0B;"></i> Fintech</div>
-              <div class="font-weight-700">18%</div>
+              <div class="font-weight-700" id="distFintechPct">0%</div>
             </div>
             <div class="col-3">
               <div class="small text-muted mb-1"><i class="fa-solid fa-circle me-1" style="color: #64748B;"></i> Others</div>
-              <div class="font-weight-700">10%</div>
+              <div class="font-weight-700" id="distOthersPct">0%</div>
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@
       <div class="col-12 col-lg-6">
         <div class="pp-card h-100">
           <h5 class="h6 font-weight-700 mb-3">Department Analytics</h5>
-          <div class="d-flex flex-column gap-3">
+          <div class="d-flex flex-column gap-3" id="deptAnalyticsContainer">
             <div>
               <div class="d-flex justify-content-between mb-1">
                 <span class="font-weight-600 text-dark small">Computer Science</span>
@@ -172,8 +172,8 @@
             <i class="fa-solid fa-user-check"></i>
           </div>
           <div class="font-weight-700 text-dark">Eligible</div>
-          <div class="text-muted small">800 Students</div>
-          <div class="badge-pill-info mt-1" style="font-size: 0.7rem;">100% Start</div>
+          <div class="text-muted small" id="funnelEligibleCount">0 Students</div>
+          <div class="badge-pill-info mt-1" style="font-size: 0.7rem;" id="funnelEligibleBadge">0% Start</div>
         </div>
 
         <!-- Step 2: Aptitude -->
@@ -182,8 +182,8 @@
             <i class="fa-solid fa-laptop-code"></i>
           </div>
           <div class="font-weight-700 text-dark">Aptitude</div>
-          <div class="text-muted small">740 Passed</div>
-          <div class="badge-pill-warning mt-1" style="font-size: 0.7rem;">-60 Drop-off</div>
+          <div class="text-muted small" id="funnelAptitudeCount">0 Passed</div>
+          <div class="badge-pill-warning mt-1" style="font-size: 0.7rem;" id="funnelAptitudeBadge">-0 Drop-off</div>
         </div>
 
         <!-- Step 3: Technical -->
@@ -192,8 +192,8 @@
             <i class="fa-solid fa-code-branch"></i>
           </div>
           <div class="font-weight-700 text-dark">Technical</div>
-          <div class="text-muted small">700 Cleared</div>
-          <div class="badge-pill-warning mt-1" style="font-size: 0.7rem;">-40 Drop-off</div>
+          <div class="text-muted small" id="funnelTechnicalCount">0 Cleared</div>
+          <div class="badge-pill-warning mt-1" style="font-size: 0.7rem;" id="funnelTechnicalBadge">-0 Drop-off</div>
         </div>
 
         <!-- Step 4: Selected -->
@@ -202,8 +202,8 @@
             <i class="fa-solid fa-trophy"></i>
           </div>
           <div class="font-weight-700 text-dark">Selected</div>
-          <div class="text-muted small">672 Offers</div>
-          <div class="badge-pill-success mt-1" style="font-size: 0.7rem;">84% Overall</div>
+          <div class="text-muted small" id="funnelSelectedCount">0 Offers</div>
+          <div class="badge-pill-success mt-1" style="font-size: 0.7rem;" id="funnelSelectedBadge">0% Overall</div>
         </div>
       </div>
     </div>
@@ -213,25 +213,157 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    // Company distribution chart
-    const ctxDist = document.getElementById('companyDistChart').getContext('2d');
-    new Chart(ctxDist, {
-      type: 'doughnut',
-      data: {
-        labels: ['Product', 'Service', 'Fintech', 'Others'],
-        datasets: [{
-          data: [42, 30, 18, 10],
-          backgroundColor: ['#4F46E5', '#10B981', '#F59E0B', '#64748B'],
-          borderWidth: 0,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '70%',
-        plugins: { legend: { display: false } }
+    let companyDistChart = null;
+
+    async function loadSectionStats(sectionName) {
+      try {
+        const stats = await API.get('/dashboard/sections?section=' + encodeURIComponent(sectionName));
+        
+        // 1. Update KPI Cards
+        document.getElementById('secTotal').innerText = stats.total_students.toLocaleString();
+        
+        const selPct = stats.total_students ? Math.round((stats.students_selected / stats.total_students) * 100) : 0;
+        document.getElementById('secSelectedPctText').innerText = selPct + '%';
+        document.getElementById('secSelected').innerText = stats.students_selected.toLocaleString();
+        document.getElementById('secSelectedProgressBar').style.width = selPct + '%';
+        
+        const pctBadge = document.getElementById('secPctBadge');
+        if (selPct >= 80) {
+          pctBadge.className = 'badge-pill-success';
+          pctBadge.innerText = 'Target 80% Exceeded';
+        } else {
+          pctBadge.className = 'badge-pill-warning';
+          pctBadge.innerText = `Target ${selPct}% Exceeded`;
+        }
+        document.getElementById('secPct').innerText = stats.placement_percentage + '%';
+        
+        const topBatchPct = selPct > 0 ? 5 : 0;
+        document.getElementById('secAvgBadge').innerText = `Top ${topBatchPct}% Batch`;
+        document.getElementById('secAvg').innerText = `$${stats.average_package}LPA`;
+        document.getElementById('secHighestPackageText').innerText = `Highest $${stats.highest_package} LPA`;
+        
+        // 2. Update Company Distribution
+        const dist = stats.company_distribution;
+        document.getElementById('distProductPct').innerText = dist.Product + '%';
+        document.getElementById('distServicePct').innerText = dist.Service + '%';
+        document.getElementById('distFintechPct').innerText = dist.Fintech + '%';
+        document.getElementById('distOthersPct').innerText = dist.Others + '%';
+        
+        // Rebuild Chart.js Donut
+        if (companyDistChart) {
+          companyDistChart.destroy();
+        }
+        
+        const ctxDist = document.getElementById('companyDistChart').getContext('2d');
+        companyDistChart = new Chart(ctxDist, {
+          type: 'doughnut',
+          data: {
+            labels: ['Product', 'Service', 'Fintech', 'Others'],
+            datasets: [{
+              data: [dist.Product, dist.Service, dist.Fintech, dist.Others],
+              backgroundColor: ['#4F46E5', '#10B981', '#F59E0B', '#64748B'],
+              borderWidth: 0,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { display: false } }
+          }
+        });
+        
+        // 3. Update Department Analytics
+        const deptContainer = document.getElementById('deptAnalyticsContainer');
+        if (stats.departments && stats.departments.length > 0) {
+          deptContainer.innerHTML = '';
+          stats.departments.forEach(dept => {
+            const div = document.createElement('div');
+            let textClass = 'text-primary';
+            let progressClass = 'bg-primary';
+            if (dept.name.includes('Electronics') || dept.name.includes('Comm')) {
+              textClass = 'text-success';
+              progressClass = 'bg-success';
+            } else if (dept.name.includes('Info') || dept.name.includes('Tech')) {
+              textClass = 'text-warning';
+              progressClass = 'bg-warning';
+            }
+            
+            div.innerHTML = `
+              <div class="d-flex justify-content-between mb-1">
+                <span class="font-weight-600 text-dark small">${dept.name}</span>
+                <span class="font-weight-700 ${textClass} small" style="${textClass === 'text-primary' ? 'color: var(--pp-primary) !important;' : ''}">${dept.percentage}% Placed (${dept.placed} / ${dept.total})</span>
+              </div>
+              <div class="progress" style="height: 8px; border-radius: 999px;">
+                <div class="progress-bar ${progressClass}" style="width: ${dept.percentage}%; ${progressClass === 'bg-primary' ? 'background-color: var(--pp-primary);' : ''}"></div>
+              </div>
+            `;
+            deptContainer.appendChild(div);
+          });
+        } else {
+          // If no database data is found for this section yet, keep the requested department stats
+          deptContainer.innerHTML = `
+            <div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="font-weight-600 text-dark small">Computer Science</span>
+                <span class="font-weight-700 text-primary small" style="color: var(--pp-primary) !important;">92% Placed (368 / 400)</span>
+              </div>
+              <div class="progress" style="height: 8px; border-radius: 999px;">
+                <div class="progress-bar" style="width: 92%; background-color: var(--pp-primary);"></div>
+              </div>
+            </div>
+            <div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="font-weight-600 text-dark small">Electronics & Comm.</span>
+                <span class="font-weight-700 text-success small">78% Placed (195 / 250)</span>
+              </div>
+              <div class="progress" style="height: 8px; border-radius: 999px;">
+                <div class="progress-bar bg-success" style="width: 78%;"></div>
+              </div>
+            </div>
+            <div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="font-weight-600 text-dark small">Information Tech</span>
+                <span class="font-weight-700 text-warning small">72% Placed (108 / 150)</span>
+              </div>
+              <div class="progress" style="height: 8px; border-radius: 999px;">
+                <div class="progress-bar bg-warning" style="width: 72%;"></div>
+              </div>
+            </div>
+          `;
+        }
+        
+        // 4. Update Funnel
+        const f = stats.funnel;
+        document.getElementById('funnelEligibleCount').innerText = f.eligible + ' Students';
+        document.getElementById('funnelEligibleBadge').innerText = selPct + '% Start';
+        
+        document.getElementById('funnelAptitudeCount').innerText = f.aptitude + ' Passed';
+        const aptDrop = f.eligible - f.aptitude;
+        document.getElementById('funnelAptitudeBadge').innerText = `-${aptDrop} Drop-off`;
+        
+        document.getElementById('funnelTechnicalCount').innerText = f.technical + ' Cleared';
+        const techDrop = f.aptitude - f.technical;
+        document.getElementById('funnelTechnicalBadge').innerText = `-${techDrop} Drop-off`;
+        
+        document.getElementById('funnelSelectedCount').innerText = f.selected + ' Offers';
+        document.getElementById('funnelSelectedBadge').innerText = selPct + '% Overall';
+
+        const connector = document.querySelector('.pipeline-connector-progress');
+        if (connector) {
+          let progressVal = 0;
+          if (f.eligible > 0) {
+             if (f.selected > 0) progressVal = 100;
+             else if (f.technical > 0) progressVal = 66;
+             else if (f.aptitude > 0) progressVal = 33;
+          }
+          connector.style.width = progressVal + '%';
+        }
+        
+      } catch (err) {
+        console.error('Failed to load section stats:', err);
       }
-    });
+    }
 
     function switchSection(btn, secName) {
       document.querySelectorAll('.bg-white.p-1.rounded-3 button').forEach(b => {
@@ -244,7 +376,14 @@
       btn.style.color = 'var(--pp-primary-dark)';
       btn.style.border = '1px solid var(--pp-primary)';
       btn.classList.add('font-weight-700');
+      
+      loadSectionStats(secName);
     }
+
+    // Initialize with Section A on load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSectionStats('Section A');
+    });
   </script>
 </body>
 </html>
