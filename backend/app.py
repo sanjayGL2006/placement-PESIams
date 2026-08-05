@@ -1,0 +1,63 @@
+"""
+Placement Pro — Flask REST API
+Run: python app.py  (dev)  |  gunicorn app:create_app()  (prod)
+"""
+import os
+from flask import Flask, jsonify
+from flask_cors import CORS  # type: ignore
+
+from database import init_db_pool, close_db_pool
+from routes.auth import auth_bp
+from routes.students import students_bp
+from routes.companies import companies_bp
+from routes.imports import imports_bp
+from routes.dashboard import dashboard_bp
+from routes.reports import reports_bp
+from routes.recycle_bin import recycle_bin_bp
+
+
+def create_app():
+    app = Flask(__name__)
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-prod")
+    app.config["JWT_SECRET"] = os.environ.get("JWT_SECRET", "change-me-too")
+    app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024  # 20MB upload cap
+    import tempfile
+    default_upload = os.path.join(tempfile.gettempdir(), "placement_uploads")
+    app.config["UPLOAD_FOLDER"] = os.environ.get("UPLOAD_FOLDER", default_upload)
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+    # Allow the PHP frontend (different origin) to call the API
+    CORS(app, supports_credentials=True, origins=os.environ.get("CORS_ORIGINS", "*").split(","))
+
+    init_db_pool(app)
+
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(students_bp, url_prefix="/api/students")
+    app.register_blueprint(companies_bp, url_prefix="/api/companies")
+    app.register_blueprint(imports_bp, url_prefix="/api/imports")
+    app.register_blueprint(dashboard_bp, url_prefix="/api/dashboard")
+    app.register_blueprint(reports_bp, url_prefix="/api/reports")
+    app.register_blueprint(recycle_bin_bp, url_prefix="/api/recycle-bin")
+
+    @app.route("/api/health")
+    def health():
+        return jsonify({"status": "ok"})
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"error": "Not found"}), 404
+
+    @app.errorhandler(413)
+    def too_large(e):
+        return jsonify({"error": "File too large (max 20MB)"}), 413
+
+    @app.teardown_appcontext
+    def _close(exc):
+        close_db_pool(exc)
+
+    return app
+
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=True, port=5000)
