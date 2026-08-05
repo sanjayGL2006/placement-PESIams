@@ -1,5 +1,7 @@
 # Placement Pro — Smart College Placement Management System
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/031678d3-d0d3-40d9-ad1a-938883908178/deploy-status)](https://app.netlify.com/projects/pbpesiams/deploys)
+
 ## Stack
 - **Frontend:** PHP + Bootstrap 5 + vanilla JS (AJAX to the API)
 - **Backend:** Python Flask REST API
