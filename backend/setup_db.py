@@ -7,10 +7,10 @@ def setup():
     # 1. Connect to default postgres DB to create placement_pro database if it doesn't exist
     conn = psycopg2.connect(
         dbname="postgres",
-        user="postgres",
-        password="postgres",
-        host="localhost",
-        port=5432
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres"),
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT", 5432))
     )
     conn.autocommit = True
     cur = conn.cursor()
@@ -29,10 +29,10 @@ def setup():
     # 2. Connect to placement_pro database
     conn = psycopg2.connect(
         dbname="placement_pro",
-        user="postgres",
-        password="postgres",
-        host="localhost",
-        port=5432
+        user=os.environ.get("DB_USER", "postgres"),
+        password=os.environ.get("DB_PASSWORD", "postgres"),
+        host=os.environ.get("DB_HOST", "localhost"),
+        port=int(os.environ.get("DB_PORT", 5432))
     )
     cur = conn.cursor()
     

@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: placement_db
+    restart: always
+    environment:
+      POSTGRES_DB: placement_pro
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d placement_pro"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: placement_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DATABASE_URL=dbname=placement_pro user=postgres password=postgres host=db port=5432
+      - SECRET_KEY=a-long-random-string-1234
+      - JWT_SECRET=another-long-random-string-5678
+      - CORS_ORIGINS=http://localhost:8000,http://127.0.0.1:8000,http://localhost:8080,http://127.0.0.1:8080
+    command: >
+      sh -c "python setup_db.py && python app.py"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: placement_frontend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PLACEMENT_API_BASE=http://localhost:5000/api
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
